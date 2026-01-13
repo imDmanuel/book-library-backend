@@ -1,0 +1,540 @@
+### VS Code REST Client Configuration
+### Install the REST Client extension: https://marketplace.visualstudio.com/items?itemName=humao.rest-client
+
+@baseUrl = http://localhost:8080
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc2NDg1NTU4NywiZXhwIjoxNzY0OTQxOTg3fQ.S0IHt9RVH47ixPQOLKbp3_Bmm-3fYd-oF5e_Bw4UBQI
+
+### Variables - Token is automatically extracted after login
+@authToken = {{token}}
+
+###############################################
+# AUTHENTICATION ENDPOINTS
+###############################################
+
+### Register a new user
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "password123",
+  "role": ["ROLE_USER"]
+}
+
+### Register a new admin user
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "email": "admin@example.com",
+  "password": "admin123",
+  "role": ["ROLE_ADMIN"]
+}
+
+### Login with username and password
+# @name login
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("token", response.body.token);
+        client.log("✅ Token automatically saved: " + response.body.token.substring(0, 20) + "...");
+    } else {
+        client.log("❌ Login failed: " + response.status);
+    }
+%}
+
+### Login as admin
+# @name adminLogin
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("token", response.body.token);
+        client.log("✅ Token automatically saved: " + response.body.token.substring(0, 20) + "...");
+    } else {
+        client.log("❌ Login failed: " + response.status);
+    }
+%}
+
+###############################################
+# BOOK ENDPOINTS (Requires Authentication)
+###############################################
+
+### Get all books (default pagination)
+GET {{baseUrl}}/api/books
+Authorization: Bearer {{authToken}}
+
+### Get books with pagination - Page 0, Size 5
+GET {{baseUrl}}/api/books?page=0&size=5
+Authorization: Bearer {{authToken}}
+
+### Get books with pagination - Page 1, Size 10
+GET {{baseUrl}}/api/books?page=1&size=10
+Authorization: Bearer {{authToken}}
+
+### Get books sorted by ID descending
+GET {{baseUrl}}/api/books?sortBy=id&sortDir=desc
+Authorization: Bearer {{authToken}}
+
+### Get books sorted by title ascending
+GET {{baseUrl}}/api/books?sortBy=title&sortDir=asc
+Authorization: Bearer {{authToken}}
+
+### Get books with custom pagination and sorting
+GET {{baseUrl}}/api/books?page=0&size=20&sortBy=id&sortDir=desc
+Authorization: Bearer {{authToken}}
+
+###############################################
+# BOOK ADMIN ENDPOINTS (Requires ADMIN Role)
+###############################################
+
+### Create a new book (Admin only)
+POST {{baseUrl}}/api/books
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "isbn": "978-0132350884",
+  "category": "Programming",
+  "totalCopies": "10",
+  "availableCopies": "10",
+  "coverImage": "https://example.com/clean-code.jpg"
+}
+
+### Create a new book - Minimal fields (availableCopies defaults to totalCopies)
+POST {{baseUrl}}/api/books
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Design Patterns",
+  "author": "Gang of Four",
+  "isbn": "978-0201633610",
+  "category": "Software Engineering",
+  "totalCopies": "5"
+}
+
+### Create a new book - Without admin role (should fail with 403)
+# First login as a regular user (not admin), then try this:
+POST {{baseUrl}}/api/books
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Test Book",
+  "author": "Test Author",
+  "isbn": "978-0000000000",
+  "totalCopies": "1"
+}
+
+### Update book - Full update (Admin only)
+PUT {{baseUrl}}/api/books/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Clean Code: A Handbook of Agile Software Craftsmanship",
+  "author": "Robert C. Martin",
+  "isbn": "978-0132350884",
+  "category": "Software Development",
+  "totalCopies": "15",
+  "availableCopies": "12",
+  "coverImage": "https://example.com/clean-code-updated.jpg"
+}
+
+### Update book - Partial update (only some fields)
+PUT {{baseUrl}}/api/books/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Updated Book Title",
+  "availableCopies": "8"
+}
+
+### Update book - Non-existent book (should return 404)
+PUT {{baseUrl}}/api/books/999
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "This Book Doesn't Exist",
+  "author": "Unknown Author",
+  "isbn": "978-0000000000",
+  "totalCopies": "1"
+}
+
+### Update book - Without admin role (should fail with 403)
+# First login as a regular user (not admin), then try this:
+PUT {{baseUrl}}/api/books/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Unauthorized Update",
+  "author": "Hacker"
+}
+
+### Update book stock - Update available copies (Admin only)
+PUT {{baseUrl}}/api/books/1/stock
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "availableCopies": "5"
+}
+
+### Update book stock - Increase available copies
+PUT {{baseUrl}}/api/books/1/stock
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "availableCopies": "15"
+}
+
+### Update book stock - Set to zero
+PUT {{baseUrl}}/api/books/1/stock
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "availableCopies": "0"
+}
+
+### Update book stock - Non-existent book (should return 404)
+PUT {{baseUrl}}/api/books/999/stock
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "availableCopies": "10"
+}
+
+### Update book stock - Without admin role (should fail with 403)
+# First login as a regular user (not admin), then try this:
+PUT {{baseUrl}}/api/books/1/stock
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "availableCopies": "10"
+}
+
+### Delete book (Admin only)
+DELETE {{baseUrl}}/api/books/6
+Authorization: Bearer {{authToken}}
+
+### Delete book - Non-existent book (should return 404)
+DELETE {{baseUrl}}/api/books/999
+Authorization: Bearer {{authToken}}
+
+### Delete book - Without admin role (should fail with 403)
+# First login as a regular user (not admin), then try this:
+DELETE {{baseUrl}}/api/books/1
+Authorization: Bearer {{authToken}}
+
+###############################################
+# BOOK GET ENDPOINTS
+###############################################
+
+### Get book by ID
+GET {{baseUrl}}/api/books/1
+Authorization: Bearer {{authToken}}
+
+### Get book by ID - Non-existent book (should return 404)
+GET {{baseUrl}}/api/books/999
+Authorization: Bearer {{authToken}}
+
+###############################################
+# BOOK SEARCH ENDPOINTS
+###############################################
+
+### Search books by keyword (searches in title, author, isbn, category)
+GET {{baseUrl}}/api/books/search?keyword=978-0000000000
+Authorization: Bearer {{authToken}}
+
+### Search books by title
+GET {{baseUrl}}/api/books/search?title=spring
+Authorization: Bearer {{authToken}}
+
+### Search books by author
+GET {{baseUrl}}/api/books/search?author=Robert
+Authorization: Bearer {{authToken}}
+
+### Search books by ISBN
+GET {{baseUrl}}/api/books/search?isbn=978-0-123456-78-9
+Authorization: Bearer {{authToken}}
+
+### Search books by category
+GET {{baseUrl}}/api/books/search?category=programming
+Authorization: Bearer {{authToken}}
+
+### Search books with pagination and sorting
+GET {{baseUrl}}/api/books/search?keyword=design&page=0&size=10&sortBy=author&sortDir=asc
+Authorization: Bearer {{authToken}}
+
+###############################################
+# USER ENDPOINTS (Requires Authentication)
+###############################################
+
+### Get current authenticated user
+GET {{baseUrl}}/api/user/current-user
+Authorization: Bearer {{authToken}}
+
+### Get current user - Without authentication (should fail with 401)
+GET {{baseUrl}}/api/user/current-user
+
+### Update user profile
+PUT {{baseUrl}}/api/user/update-profile
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "email": "anotheremail@example.com"
+}
+
+### Update user profile - Another example
+PUT {{baseUrl}}/api/user/update-profile
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "email": "updated@example.com"
+}
+
+### Update user profile - Without authentication (should fail with 401)
+PUT {{baseUrl}}/api/user/update-profile
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+###############################################
+# LOAN ENDPOINTS (Requires Authentication)
+###############################################
+
+### Borrow a book
+POST {{baseUrl}}/api/loans/borrow
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "bookId": 5
+}
+
+### Borrow a book - Another example
+POST {{baseUrl}}/api/loans/borrow
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "bookId": 2
+}
+
+### Borrow a book - Non-existent book (should return 404)
+POST {{baseUrl}}/api/loans/borrow
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "bookId": 999
+}
+
+### Borrow a book - Book with no available copies (should return error)
+POST {{baseUrl}}/api/loans/borrow
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "bookId": 1
+}
+
+### Borrow a book - Without authentication (should fail with 401)
+POST {{baseUrl}}/api/loans/borrow
+Content-Type: application/json
+
+{
+  "bookId": 1
+}
+
+### Return a borrowed book
+POST {{baseUrl}}/api/loans/return
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "loanId": 2
+}
+
+### Return a borrowed book - Another example
+POST {{baseUrl}}/api/loans/return
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "loanId": 2
+}
+
+### Return a borrowed book - Non-existent loan (should return 404)
+POST {{baseUrl}}/api/loans/return
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "loanId": 999
+}
+
+### Return a borrowed book - Already returned (should return error)
+POST {{baseUrl}}/api/loans/return
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "loanId": 1
+}
+
+### Return a borrowed book - Without authentication (should fail with 401)
+POST {{baseUrl}}/api/loans/return
+Content-Type: application/json
+
+{
+  "loanId": 1
+}
+
+### Get my loans (paginated)
+GET {{baseUrl}}/api/loans/my-loans
+Authorization: Bearer {{authToken}}
+
+### Get my loans - With pagination
+GET {{baseUrl}}/api/loans/my-loans?page=0&size=5
+Authorization: Bearer {{authToken}}
+
+### Get my loans - With sorting
+GET {{baseUrl}}/api/loans/my-loans?sortBy=borrowDate&sortDir=desc
+Authorization: Bearer {{authToken}}
+
+### Get my loans - With pagination and sorting
+GET {{baseUrl}}/api/loans/my-loans?page=0&size=10&sortBy=dueDate&sortDir=asc
+Authorization: Bearer {{authToken}}
+
+### Get my loans - Filter by status: all (default)
+GET {{baseUrl}}/api/loans/my-loans?status=all
+Authorization: Bearer {{authToken}}
+
+### Get my loans - Filter by status: active (not returned)
+GET {{baseUrl}}/api/loans/my-loans?status=active
+Authorization: Bearer {{authToken}}
+
+### Get my loans - Filter by status: returned
+GET {{baseUrl}}/api/loans/my-loans?status=returned
+Authorization: Bearer {{authToken}}
+
+### Get my loans - Filter by status: overdue
+GET {{baseUrl}}/api/loans/my-loans?status=overdue
+Authorization: Bearer {{authToken}}
+
+### Get my loans - With status filter, pagination and sorting
+GET {{baseUrl}}/api/loans/my-loans?status=active&page=0&size=5&sortBy=dueDate&sortDir=asc
+Authorization: Bearer {{authToken}}
+
+### Get my loans - Without authentication (should fail with 401)
+GET {{baseUrl}}/api/loans/my-loans
+
+###############################################
+# LOAN ADMIN ENDPOINTS (Requires ADMIN Role)
+###############################################
+
+### Get all loans (Admin only) - Default pagination
+GET {{baseUrl}}/api/loans/
+Authorization: Bearer {{authToken}}
+
+### Get all loans - With pagination
+GET {{baseUrl}}/api/loans/?page=0&size=5
+Authorization: Bearer {{authToken}}
+
+### Get all loans - With sorting
+GET {{baseUrl}}/api/loans/?sortBy=borrowDate&sortDir=desc
+Authorization: Bearer {{authToken}}
+
+### Get all loans - Filter by status: all (default)
+GET {{baseUrl}}/api/loans/?status=all
+Authorization: Bearer {{authToken}}
+
+### Get all loans - Filter by status: active (not returned)
+GET {{baseUrl}}/api/loans/?status=active
+Authorization: Bearer {{authToken}}
+
+### Get all loans - Filter by status: returned
+GET {{baseUrl}}/api/loans/?status=returned
+Authorization: Bearer {{authToken}}
+
+### Get all loans - Filter by status: overdue
+GET {{baseUrl}}/api/loans/?status=overdue
+Authorization: Bearer {{authToken}}
+
+### Get all loans - With status filter, pagination and sorting
+GET {{baseUrl}}/api/loans/?status=active&page=0&size=10&sortBy=dueDate&sortDir=asc
+Authorization: Bearer {{authToken}}
+
+### Get all loans - Without admin role (should fail with 403)
+# First login as a regular user (not admin), then try this:
+GET {{baseUrl}}/api/loans/
+Authorization: Bearer {{authToken}}
+
+### Get all loans - Without authentication (should fail with 401)
+GET {{baseUrl}}/api/loans/
+
+###############################################
+# OAUTH2 ENDPOINTS
+###############################################
+
+### Initiate Google OAuth2 login
+# Note: This will redirect to Google login page
+# After successful login, you'll be redirected to the frontend callback URL with the token
+GET {{baseUrl}}/oauth2/authorization/google
+
+### OAuth2 callback endpoint (handled automatically by Spring Security)
+# GET {{baseUrl}}/login/oauth2/code/google
+
+###############################################
+# SWAGGER/OPENAPI DOCUMENTATION
+###############################################
+
+### Get OpenAPI documentation (JSON)
+GET {{baseUrl}}/v3/api-docs
+
+### Get OpenAPI documentation (YAML)
+GET {{baseUrl}}/v3/api-docs.yaml
+
+### Access Swagger UI
+GET {{baseUrl}}/swagger-ui/index.html
+
+###############################################
+# TESTING WORKFLOW
+###############################################
+
+### Quick Testing Workflow:
+### 1. Use "Register a new user" endpoint above to create an account
+### 2. Use "Login with username and password" or "Login as admin" above to get JWT token
+### 3. Token is automatically saved and can be used for protected endpoints
+### 4. Test protected endpoints like GET /api/books below
+
