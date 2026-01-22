@@ -2,7 +2,6 @@ package com.imdmanuel.book_library.services;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,15 +9,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.imdmanuel.book_library.enums.LoanStatus;
+import com.imdmanuel.book_library.exception.ResourceNotFoundException;
+import com.imdmanuel.book_library.mappers.LoanMapper;
 import com.imdmanuel.book_library.models.Book;
 import com.imdmanuel.book_library.models.Loan;
 import com.imdmanuel.book_library.models.User;
+import com.imdmanuel.book_library.payload.response.LoanResponse;
 import com.imdmanuel.book_library.repository.BookRepository;
 import com.imdmanuel.book_library.repository.LoanRepository;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class LoanService {
 
     private final PenaltyService penaltyService;
@@ -26,18 +30,10 @@ public class LoanService {
     private final BookRepository bookRepository;
     private final UserService userService;
     private final ReservationService reservationService;
-
-    public LoanService(LoanRepository loanRepository, BookRepository bookRepository, UserService userService,
-            PenaltyService penaltyService, ReservationService reservationService) {
-        this.loanRepository = loanRepository;
-        this.bookRepository = bookRepository;
-        this.userService = userService;
-        this.penaltyService = penaltyService;
-        this.reservationService = reservationService;
-    }
+    private final LoanMapper loanMapper;
 
     @Transactional
-    public Optional<Loan> borrowBook(@NonNull Long bookId) {
+    public LoanResponse borrowBook(@NonNull Long bookId) {
         User currentUser = userService.getCurrentUserOrThrow();
 
         penaltyService.checkSuspensionStatus(currentUser);
@@ -49,22 +45,17 @@ public class LoanService {
             }
         }
 
-        Optional<Book> bookOptional = bookRepository.findById(bookId);
-
-        if (bookOptional.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Book book = bookOptional.get();
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book", "id", bookId));
 
         if (book.getAvailableCopies() <= 0) {
             throw new RuntimeException("Book is not available. No copies available for borrowing");
         }
 
-        Optional<Loan> existingLoan = loanRepository.findByUserAndBookAndReturnDateIsNull(currentUser, book);
-        if (existingLoan.isPresent()) {
-            throw new RuntimeException("You have already borrowed this book");
-        }
+        loanRepository.findByUserAndBookAndReturnDateIsNull(currentUser, book)
+                .ifPresent(l -> {
+                    throw new RuntimeException("You have already borrowed this book");
+                });
 
         Loan loan = new Loan();
         loan.setUser(currentUser);
@@ -81,20 +72,15 @@ public class LoanService {
         book.setAvailableCopies(book.getAvailableCopies() - 1);
         bookRepository.save(book);
 
-        return Optional.of(savedLoan);
+        return loanMapper.toResponse(savedLoan);
     }
 
     @Transactional
-    public Optional<Loan> returnBook(@NonNull Long loanId) {
+    public LoanResponse returnBook(@NonNull Long loanId) {
         User currentUser = userService.getCurrentUserOrThrow();
 
-        Optional<Loan> loanOptional = loanRepository.findByIdAndUser(loanId, currentUser);
-
-        if (loanOptional.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Loan loan = loanOptional.get();
+        Loan loan = loanRepository.findByIdAndUser(loanId, currentUser)
+                .orElseThrow(() -> new ResourceNotFoundException("Loan", "id", loanId));
 
         if (loan.getReturnDate() != null) {
             throw new RuntimeException("Book has already been returned");
@@ -109,33 +95,35 @@ public class LoanService {
         book.setAvailableCopies(book.getAvailableCopies() + 1);
         bookRepository.save(book);
 
-        // TODO: Can this be async?
         // check and fulfill reservations when book is returned
         reservationService.checkAndFulfillReservations(book);
 
-        return Optional.of(savedLoan);
+        return loanMapper.toResponse(savedLoan);
     }
 
-    public Page<Loan> allLoans(LoanStatus status, @NonNull Pageable pageable) {
+    public Page<LoanResponse> allLoans(LoanStatus status, @NonNull Pageable pageable) {
         Date now = new Date();
 
-        return switch (status) {
+        Page<Loan> loans = switch (status) {
             case ALL -> loanRepository.findAll(pageable);
             case ACTIVE -> loanRepository.findByReturnDateIsNull(pageable);
             case RETURNED -> loanRepository.findByReturnDateIsNotNull(pageable);
             case OVERDUE -> loanRepository.findByReturnDateIsNullAndDueDateBefore(now, pageable);
         };
 
+        return loans.map(loanMapper::toResponse);
     }
 
-    public Page<Loan> myLoans(User currentUser, LoanStatus status, Pageable pageable) {
+    public Page<LoanResponse> myLoans(User currentUser, LoanStatus status, Pageable pageable) {
         Date now = new Date();
 
-        return switch (status) {
+        Page<Loan> loans = switch (status) {
             case ALL -> loanRepository.findByUser(currentUser, pageable);
             case ACTIVE -> loanRepository.findByUserAndReturnDateIsNull(currentUser, pageable);
             case RETURNED -> loanRepository.findByUserAndReturnDateIsNotNull(currentUser, pageable);
             case OVERDUE -> loanRepository.findByUserAndReturnDateIsNullAndDueDateBefore(currentUser, now, pageable);
         };
+
+        return loans.map(loanMapper::toResponse);
     }
 }

@@ -1,0 +1,44 @@
+### MODULE: IDENTITY & REGISTRATION
+
+###############################################
+# AUTHENTICATION (Run login to update token)
+###############################################
+
+# @name login
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+@userToken = {{login.response.body.token}}
+
+###############################################
+# USER MANAGEMENT
+###############################################
+
+### Register a new user
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "email": "newuser@example.com",
+  "password": "password123",
+  "role": ["ROLE_USER"]
+}
+
+### Get current profile
+GET {{baseUrl}}/api/user/current-user
+Authorization: Bearer {{userToken}}
+
+### Update profile
+PUT {{baseUrl}}/api/user/update-profile
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "email": "updated@example.com"
+}

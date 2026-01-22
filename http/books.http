@@ -1,0 +1,66 @@
+### MODULE: BOOKS
+
+###############################################
+# AUTHENTICATION (Run login to update tokens)
+###############################################
+
+# @name login
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+###
+
+# @name adminLogin
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+@userToken = {{login.response.body.token}}
+@adminToken = {{adminLogin.response.body.token}}
+
+###############################################
+# CATALOG ENDPOINTS
+###############################################
+
+### [User] Get all books
+GET {{baseUrl}}/api/books
+Authorization: Bearer {{userToken}}
+
+### [User] Search books
+GET {{baseUrl}}/api/books/search?keyword=978-0132350884
+Authorization: Bearer {{userToken}}
+
+### [Admin] Create a new book
+POST {{baseUrl}}/api/books
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "isbn": "978-0132350884",
+  "category": "Programming",
+  "totalCopies": "10"
+}
+
+### [Admin] Update book stock
+PUT {{baseUrl}}/api/books/1/stock
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "availableCopies": "5"
+}
+
+### [Admin] Delete book
+DELETE {{baseUrl}}/api/books/6
+Authorization: Bearer {{adminToken}}

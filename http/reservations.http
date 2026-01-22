@@ -1,0 +1,41 @@
+### MODULE: RESERVATIONS
+
+###############################################
+# AUTHENTICATION (Run login to update token)
+###############################################
+
+# @name login
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+@userToken = {{login.response.body.token}}
+
+###############################################
+# RESERVATION ENDPOINTS
+###############################################
+
+### [User] Create a reservation
+POST {{baseUrl}}/api/reservations
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "bookId": 1
+}
+
+### [User] Get my reservations
+GET {{baseUrl}}/api/reservations/my-reservations
+Authorization: Bearer {{userToken}}
+
+### [User] Get waitlist position
+GET {{baseUrl}}/api/reservations/1/position
+Authorization: Bearer {{userToken}}
+
+### [User] Cancel a reservation
+DELETE {{baseUrl}}/api/reservations/1
+Authorization: Bearer {{userToken}}

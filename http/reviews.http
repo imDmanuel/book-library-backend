@@ -1,0 +1,50 @@
+### MODULE: REVIEWS
+
+###############################################
+# AUTHENTICATION (Run login to update token)
+###############################################
+
+# @name login
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+@userToken = {{login.response.body.token}}
+
+###############################################
+# REVIEW ENDPOINTS
+###############################################
+
+### [User] Create a review
+POST {{baseUrl}}/api/reviews
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "bookId": 2,
+  "rating": 5,
+  "comment": "Amazing book!"
+}
+
+### [User] Get reviews for a book
+GET {{baseUrl}}/api/reviews/book/1
+Authorization: Bearer {{userToken}}
+
+### [User] Update a review
+PUT {{baseUrl}}/api/reviews/1
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "bookId": 1,
+  "rating": 4,
+  "comment": "Updated feedback."
+}
+
+### [User] Delete a review
+DELETE {{baseUrl}}/api/reviews/1
+Authorization: Bearer {{userToken}}

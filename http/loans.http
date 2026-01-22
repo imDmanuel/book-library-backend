@@ -1,0 +1,56 @@
+### MODULE: LOANS
+
+###############################################
+# AUTHENTICATION (Run login to update tokens)
+###############################################
+
+# @name login
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+# @name adminLogin
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+@userToken = {{login.response.body.token}}
+@adminToken = {{adminLogin.response.body.token}}
+
+###############################################
+# LOAN ENDPOINTS
+###############################################
+
+### [User] Borrow a book
+POST {{baseUrl}}/api/loans/borrow
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "bookId": 1
+}
+
+### [User] Return a borrowed book
+POST {{baseUrl}}/api/loans/return
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "loanId": 1
+}
+
+### [User] Get my loans
+GET {{baseUrl}}/api/loans/my-loans?status=all
+Authorization: Bearer {{userToken}}
+
+### [Admin] Get all loans across system
+GET {{baseUrl}}/api/loans/
+Authorization: Bearer {{adminToken}}

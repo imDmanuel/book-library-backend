@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -36,13 +37,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             ReservationStatus status);
 
     // Find expired reservations
+    @Query("SELECT r FROM Reservation r WHERE r.status IN :statuses AND r.expiryDate < :now")
     List<Reservation> findExpiredReservations(
-            @Param("statuses") List<ReservationStatus> status,
+            @Param("statuses") List<ReservationStatus> statuses,
             @Param("now") Date now);
 
     // count active reservations for a book
     long countByBookAndStatusIn(Book book, List<ReservationStatus> statuses);
 
     // find user's active reservations
-    List<Reservation> findByUserAndSTatusIn(User user, List<ReservationStatus> statuses);
+    List<Reservation> findByUserAndStatusIn(User user, List<ReservationStatus> statuses);
 }

@@ -1,0 +1,14 @@
+### MODULE: SYSTEM & DOCUMENTATION
+
+###############################################
+# SYSTEM ENDPOINTS
+###############################################
+
+### Get OpenAPI documentation (JSON)
+GET {{baseUrl}}/v3/api-docs
+
+### Get OpenAPI documentation (YAML)
+GET {{baseUrl}}/v3/api-docs.yaml
+
+### Access Swagger UI
+GET {{baseUrl}}/swagger-ui/index.html

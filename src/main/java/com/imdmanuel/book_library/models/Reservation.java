@@ -44,7 +44,7 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
-    private Integer positionQueue; // For waitlist - position 1 is next in line
+    private Integer positionInQueue; // For waitlist - position 1 is next in line
 
     @PrePersist
     protected void onCreate() {
