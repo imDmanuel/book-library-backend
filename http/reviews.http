@@ -31,7 +31,7 @@ Content-Type: application/json
 }
 
 ### [User] Get reviews for a book
-GET {{baseUrl}}/api/reviews/book/1
+GET {{baseUrl}}/api/reviews/book/2
 Authorization: Bearer {{userToken}}
 
 ### [User] Update a review

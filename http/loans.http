@@ -13,6 +13,8 @@ Content-Type: application/json
   "password": "password123"
 }
 
+###
+
 # @name adminLogin
 POST {{baseUrl}}/api/auth/signin
 Content-Type: application/json
@@ -35,7 +37,7 @@ Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
 {
-  "bookId": 1
+  "bookId": 3
 }
 
 ### [User] Return a borrowed book

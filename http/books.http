@@ -53,7 +53,7 @@ Content-Type: application/json
 }
 
 ### [Admin] Update book stock
-PUT {{baseUrl}}/api/books/1/stock
+PUT {{baseUrl}}/api/books/2/stock
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
