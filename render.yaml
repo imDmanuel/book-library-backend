@@ -30,3 +30,5 @@ services:
         sync: false
       - key: SMTP_PASSWORD
         sync: false
+      - key: FRONTEND_REDIRECT_URL
+        sync: false
