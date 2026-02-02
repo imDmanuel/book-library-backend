@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,26 +16,30 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.imdmanuel.book_library.mappers.BookMapper;
-import com.imdmanuel.book_library.models.Book;
 import com.imdmanuel.book_library.payload.request.CreateBookRequest;
 import com.imdmanuel.book_library.payload.request.StockUpdateDto;
 import com.imdmanuel.book_library.payload.request.UpdateBookRequest;
 import com.imdmanuel.book_library.payload.response.BookResponse;
 import com.imdmanuel.book_library.payload.response.MessageResponse;
+import com.imdmanuel.book_library.payload.response.FileUploadResult;
 import com.imdmanuel.book_library.services.BookService;
+import com.imdmanuel.book_library.services.FileStorageService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
 public class BookController {
     private final BookService bookService;
-    private final BookMapper bookMapper;
+    private final FileStorageService fileStorageService;
 
     @GetMapping("/search")
     public ResponseEntity<Page<BookResponse>> searchBooks(
@@ -72,11 +77,14 @@ public class BookController {
         return ResponseEntity.ok(bookService.getBooks(pageable));
     }
 
-    @PostMapping()
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<BookResponse> createBook(@Valid @RequestBody CreateBookRequest createBookRequest) {
-        Book book = bookMapper.toEntity(createBookRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(bookService.createBook(book));
+    public ResponseEntity<BookResponse> createBook(
+            @Valid @RequestPart("book") CreateBookRequest createBookRequest,
+            @RequestPart(value = "cover", required = false) MultipartFile cover,
+            @RequestPart(value = "document", required = false) MultipartFile document) throws IOException {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(bookService.createBook(createBookRequest, cover, document));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -98,5 +106,21 @@ public class BookController {
     public ResponseEntity<BookResponse> updateStock(@PathVariable Long id,
             @Valid @RequestBody StockUpdateDto stockUpdateDto) {
         return ResponseEntity.ok(bookService.updateStock(id, stockUpdateDto));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/cover")
+    public ResponseEntity<BookResponse> uploadCover(@PathVariable Long id,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        FileUploadResult result = fileStorageService.uploadImage(file, "books/covers");
+        return ResponseEntity.ok(bookService.updateBookCover(id, result));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/document")
+    public ResponseEntity<BookResponse> uploadDocument(@PathVariable Long id,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        FileUploadResult result = fileStorageService.uploadRawFile(file, "books/documents");
+        return ResponseEntity.ok(bookService.updateBookDocument(id, result));
     }
 }

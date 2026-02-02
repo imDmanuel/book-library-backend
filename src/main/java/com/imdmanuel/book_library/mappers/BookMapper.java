@@ -12,6 +12,7 @@ import com.imdmanuel.book_library.payload.response.BookResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import com.imdmanuel.book_library.services.ReviewService;
+import lombok.NonNull;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public abstract class BookMapper {
@@ -21,16 +22,16 @@ public abstract class BookMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "availableCopies", expression = "java(request.getAvailableCopies() != null ? request.getAvailableCopies() : request.getTotalCopies())")
-    public abstract Book toEntity(CreateBookRequest request);
+    @Mapping(target = "coverImageId", ignore = true)
+    @Mapping(target = "documentUrl", ignore = true)
+    @Mapping(target = "documentId", ignore = true)
+    public abstract @NonNull Book toEntity(CreateBookRequest request);
 
     @Mapping(target = "averageRating", ignore = true)
     @Mapping(target = "totalReviews", ignore = true)
-    public abstract BookResponse toResponseBase(Book book);
+    public abstract @NonNull BookResponse toResponseBase(@NonNull Book book);
 
-    public BookResponse toResponse(Book book) {
-        if (book == null) {
-            return null;
-        }
+    public @NonNull BookResponse toResponse(@NonNull Book book) {
         BookResponse response = toResponseBase(book);
         response.setAverageRating(reviewService.getAverageRating(book.getId()));
         response.setTotalReviews(reviewService.getTotalReviews(book.getId()));
@@ -38,5 +39,8 @@ public abstract class BookMapper {
     }
 
     @Mapping(target = "id", ignore = true)
-    public abstract void updateEntityFromRequest(UpdateBookRequest request, @MappingTarget Book book);
+    @Mapping(target = "coverImageId", ignore = true)
+    @Mapping(target = "documentUrl", ignore = true)
+    @Mapping(target = "documentId", ignore = true)
+    public abstract void updateEntityFromRequest(UpdateBookRequest request, @MappingTarget @NonNull Book book);
 }

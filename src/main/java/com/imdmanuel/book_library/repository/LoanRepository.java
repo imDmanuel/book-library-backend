@@ -37,4 +37,8 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     Page<Loan> findByReturnDateIsNull(Pageable pageable);
 
     Page<Loan> findByReturnDateIsNotNull(Pageable pageable);
+
+    List<Loan> findByReturnDateIsNullAndDueDateBetween(Date start, Date end);
+
+    List<Loan> findByReturnDateIsNullAndDueDateBefore(Date date);
 }

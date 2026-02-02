@@ -1,0 +1,1 @@
+ALTER TABLE books ADD COLUMN document_url VARCHAR(255);

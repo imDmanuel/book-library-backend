@@ -41,14 +41,17 @@ public class AuthController {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final com.imdmanuel.book_library.services.notifications.NotificationService notificationService;
 
     public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
-            RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils) {
+            RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils,
+            com.imdmanuel.book_library.services.notifications.NotificationService notificationService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
+        this.notificationService = notificationService;
     }
 
     @PostMapping("/signin")
@@ -105,6 +108,8 @@ public class AuthController {
                 passwordEncoder.encode(signupRequest.getPassword()), signupRequest.getEmail(), roles, 0, null, false);
 
         userRepository.save(user);
+
+        notificationService.sendAccountCreatedNotification(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }

@@ -16,6 +16,7 @@ public class BookResponse {
     private Integer totalCopies;
     private Integer availableCopies;
     private String coverImage;
+    private String documentUrl;
     private Double averageRating;
     private Integer totalReviews;
 }

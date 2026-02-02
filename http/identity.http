@@ -24,8 +24,8 @@ POST {{baseUrl}}/api/auth/signup
 Content-Type: application/json
 
 {
-  "username": "newuser",
-  "email": "newuser@example.com",
+  "username": "albinson",
+  "email": "albinsonnormanson@gmail.com",
   "password": "password123",
   "role": ["ROLE_USER"]
 }
@@ -40,5 +40,5 @@ Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
 {
-  "email": "updated@example.com"
+  "email": "billyjean@mailinator.com"
 }

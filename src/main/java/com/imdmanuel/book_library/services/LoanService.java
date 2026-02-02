@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.imdmanuel.book_library.enums.LoanStatus;
+import com.imdmanuel.book_library.enums.NotificationType;
 import com.imdmanuel.book_library.exception.ResourceNotFoundException;
 import com.imdmanuel.book_library.mappers.LoanMapper;
 import com.imdmanuel.book_library.models.Book;
@@ -17,6 +18,7 @@ import com.imdmanuel.book_library.models.User;
 import com.imdmanuel.book_library.payload.response.LoanResponse;
 import com.imdmanuel.book_library.repository.BookRepository;
 import com.imdmanuel.book_library.repository.LoanRepository;
+import com.imdmanuel.book_library.services.notifications.NotificationService;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class LoanService {
     private final BookRepository bookRepository;
     private final UserService userService;
     private final ReservationService reservationService;
+    private final NotificationService notificationService;
     private final LoanMapper loanMapper;
 
     @Transactional
@@ -72,6 +75,8 @@ public class LoanService {
         book.setAvailableCopies(book.getAvailableCopies() - 1);
         bookRepository.save(book);
 
+        notificationService.sendLoanNotification(savedLoan, NotificationType.LOAN_CONFIRMATION);
+
         return loanMapper.toResponse(savedLoan);
     }
 
@@ -94,6 +99,9 @@ public class LoanService {
         Book book = loan.getBook();
         book.setAvailableCopies(book.getAvailableCopies() + 1);
         bookRepository.save(book);
+
+        // Notify user about return
+        notificationService.sendLoanNotification(savedLoan, NotificationType.LOAN_RETURN_CONFIRMATION);
 
         // check and fulfill reservations when book is returned
         reservationService.checkAndFulfillReservations(book);

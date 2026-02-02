@@ -11,6 +11,7 @@ import com.imdmanuel.book_library.models.Loan;
 import com.imdmanuel.book_library.models.User;
 import com.imdmanuel.book_library.repository.LoanRepository;
 import com.imdmanuel.book_library.repository.UserRepository;
+import com.imdmanuel.book_library.services.notifications.NotificationService;
 
 import lombok.NonNull;
 
@@ -18,15 +19,18 @@ import lombok.NonNull;
 public class PenaltyService {
     private final LoanRepository loanRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // Configuration constants
     private static final int STRIKES_PER_OVERDUE = 1;
     private static final int MAX_STRIKES_BEFORE_SUSPENSION = 3;
     private static final int SUSPENSION_DAYS = 7; // 7 days suspension
 
-    public PenaltyService(LoanRepository loanRepository, UserRepository userRepository) {
+    public PenaltyService(LoanRepository loanRepository, UserRepository userRepository,
+            com.imdmanuel.book_library.services.notifications.NotificationService notificationService) {
         this.loanRepository = loanRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -46,6 +50,13 @@ public class PenaltyService {
 
         if (user.getStrikes() >= MAX_STRIKES_BEFORE_SUSPENSION) {
             suspendUser(user, SUSPENSION_DAYS);
+            notificationService.sendPenaltyNotification(user,
+                    com.imdmanuel.book_library.enums.NotificationType.SUSPENSION_NOTICE,
+                    "Your account has been suspended for " + SUSPENSION_DAYS + " days due to multiple overdue books.");
+        } else {
+            notificationService.sendPenaltyNotification(user,
+                    com.imdmanuel.book_library.enums.NotificationType.PENALTY_APPLIED,
+                    "You have received " + overdueLoans.size() + " strikes for overdue books.");
         }
 
         userRepository.save(user);
@@ -69,6 +80,13 @@ public class PenaltyService {
 
             if (user.getStrikes() >= MAX_STRIKES_BEFORE_SUSPENSION) {
                 suspendUser(user, SUSPENSION_DAYS);
+                notificationService.sendPenaltyNotification(user,
+                        com.imdmanuel.book_library.enums.NotificationType.SUSPENSION_NOTICE,
+                        "Your account has been suspended for " + SUSPENSION_DAYS + " days.");
+            } else {
+                notificationService.sendPenaltyNotification(user,
+                        com.imdmanuel.book_library.enums.NotificationType.PENALTY_APPLIED,
+                        "You have received a strike for late return of " + loan.getBook().getTitle());
             }
 
             userRepository.save(user);

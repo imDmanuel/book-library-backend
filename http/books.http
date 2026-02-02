@@ -64,3 +64,27 @@ Content-Type: application/json
 ### [Admin] Delete book
 DELETE {{baseUrl}}/api/books/6
 Authorization: Bearer {{adminToken}}
+
+### [Admin] Upload book cover
+POST {{baseUrl}}/api/books/2/cover
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="cover.jpg"
+Content-Type: image/jpeg
+
+< ./cover.jpeg
+--boundary--
+
+### [Admin] Upload book document
+POST {{baseUrl}}/api/books/2/document
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="book.pdf"
+Content-Type: application/pdf
+
+< ./book.pdf
+--boundary--

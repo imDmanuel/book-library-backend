@@ -33,8 +33,9 @@ public class ReviewService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
 
-        Book book = bookRepository.findById(request.getBookId())
-                .orElseThrow(() -> new ResourceNotFoundException("Book", "id", request.getBookId()));
+        Long bookId = java.util.Objects.requireNonNull(request.getBookId(), "Book ID must not be null");
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book", "id", bookId));
 
         // Check if user already reviewed this book
         reviewRepository.findByBookIdAndUserId(book.getId(), user.getId())
@@ -50,12 +51,12 @@ public class ReviewService {
         return reviewMapper.toResponse(savedReview);
     }
 
-    public Page<ReviewResponse> getReviewsByBook(Long bookId, Pageable pageable) {
+    public Page<ReviewResponse> getReviewsByBook(@NonNull Long bookId, Pageable pageable) {
         return reviewRepository.findByBookId(bookId, pageable)
                 .map(reviewMapper::toResponse);
     }
 
-    public Page<ReviewResponse> getReviewsByUser(Long userId, Pageable pageable) {
+    public Page<ReviewResponse> getReviewsByUser(@NonNull Long userId, Pageable pageable) {
         return reviewRepository.findByUserId(userId, pageable)
                 .map(reviewMapper::toResponse);
     }
@@ -75,7 +76,7 @@ public class ReviewService {
     }
 
     @Transactional
-    public void deleteReview(Long id, String email) {
+    public void deleteReview(@NonNull Long id, String email) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Review", "id", id));
 
@@ -86,12 +87,12 @@ public class ReviewService {
         reviewRepository.delete(review);
     }
 
-    public Double getAverageRating(Long bookId) {
+    public Double getAverageRating(@NonNull Long bookId) {
         Double avg = reviewRepository.getAverageRatingByBookId(bookId);
         return avg != null ? avg : 0.0;
     }
 
-    public Integer getTotalReviews(Long bookId) {
+    public Integer getTotalReviews(@NonNull Long bookId) {
         return reviewRepository.countByBookId(bookId);
     }
 }

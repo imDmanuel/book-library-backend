@@ -9,7 +9,7 @@ POST {{baseUrl}}/api/auth/signin
 Content-Type: application/json
 
 {
-  "username": "testuser",
+  "username": "newuser2",
   "password": "password123"
 }
 
@@ -37,7 +37,7 @@ Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
 {
-  "bookId": 3
+  "bookId": 5
 }
 
 ### [User] Return a borrowed book
@@ -46,11 +46,11 @@ Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
 {
-  "loanId": 1
+  "loanId": 3
 }
 
 ### [User] Get my loans
-GET {{baseUrl}}/api/loans/my-loans?status=all
+GET {{baseUrl}}/api/loans/my-loans?status=active
 Authorization: Bearer {{userToken}}
 
 ### [Admin] Get all loans across system

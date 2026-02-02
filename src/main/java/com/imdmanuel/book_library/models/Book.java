@@ -32,4 +32,8 @@ public class Book {
     private Integer availableCopies;
 
     private String coverImage;
+    private String coverImageId;
+
+    private String documentUrl;
+    private String documentId;
 }

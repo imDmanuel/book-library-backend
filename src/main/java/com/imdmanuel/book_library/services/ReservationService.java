@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.imdmanuel.book_library.enums.NotificationType;
 import com.imdmanuel.book_library.enums.ReservationStatus;
 import com.imdmanuel.book_library.exception.ResourceNotFoundException;
 import com.imdmanuel.book_library.mappers.ReservationMapper;
@@ -19,6 +20,7 @@ import com.imdmanuel.book_library.models.User;
 import com.imdmanuel.book_library.payload.response.ReservationResponse;
 import com.imdmanuel.book_library.repository.BookRepository;
 import com.imdmanuel.book_library.repository.ReservationRepository;
+import com.imdmanuel.book_library.services.notifications.NotificationService;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final BookRepository bookRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
     private final ReservationMapper reservationMapper;
 
     /**
@@ -81,7 +84,11 @@ public class ReservationService {
             reservation.setPositionInQueue(positionInQueue);
         }
 
-        return reservationMapper.toResponse(reservationRepository.save(reservation));
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        notificationService.sendReservationNotification(savedReservation, NotificationType.RESERVATION_CONFIRMATION);
+
+        return reservationMapper.toResponse(savedReservation);
     }
 
     /** Cancel a reservation */
@@ -148,7 +155,9 @@ public class ReservationService {
                     log.info("Reservation {} activated for book {} (user: {})", reservation.getId(), book.getId(),
                             reservation.getUser().getUsername());
 
-                    // TODO: send notification to user that the book is available
+                    // Send notification to user that the book is available
+                    notificationService.sendReservationNotification(reservation,
+                            NotificationType.RESERVATION_AVAILABLE);
                 });
     }
 
@@ -185,6 +194,9 @@ public class ReservationService {
             if (reservation.getPositionInQueue() != null) {
                 updateQueuePositions(reservation.getBook());
             }
+
+            // Notify user about expiration
+            notificationService.sendReservationNotification(reservation, NotificationType.RESERVATION_EXPIRED);
         }
 
         log.info("Expired {} reservations", expiredReservations.size());

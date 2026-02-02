@@ -1,0 +1,2 @@
+ALTER TABLE books ADD COLUMN cover_image_id VARCHAR(255);
+ALTER TABLE books ADD COLUMN document_id VARCHAR(255);

@@ -31,4 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
-application.properties
+# application.properties (Now safe to track)
+src/main/resources/application-local.properties
+.env

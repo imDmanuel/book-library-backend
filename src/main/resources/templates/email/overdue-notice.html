@@ -1,0 +1,73 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #c0392b;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        border-radius: 8px 8px 0 0;
+      }
+      .content {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 12px;
+        color: #777;
+        margin-top: 20px;
+      }
+      .book-details {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+      }
+      .overdue {
+        color: #c0392b;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Overdue Notice</h1>
+    </div>
+    <div class="content">
+      <p>Hello <span th:text="${user.username}">User</span>,</p>
+      <p class="overdue">URGENT: Your book loan is now overdue!</p>
+
+      <div class="book-details">
+        <strong>Book:</strong> <span th:text="${book.title}">Title</span><br />
+        <strong>Author:</strong> <span th:text="${book.author}">Author</span
+        ><br />
+        <strong>Was Due On:</strong>
+        <span
+          style="font-weight: bold"
+          th:text="${#dates.format(loan.dueDate, 'yyyy-MM-dd')}"
+          >2026-02-14</span
+        >
+      </div>
+
+      <p>
+        Failure to return overdue books results in penalties and may lead to
+        account suspension. Please return the book immediately.
+      </p>
+    </div>
+    <div class="footer">© 2026 Book Library System. All rights reserved.</div>
+  </body>
+</html>

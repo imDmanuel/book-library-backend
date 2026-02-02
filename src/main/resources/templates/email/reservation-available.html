@@ -1,0 +1,84 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #27ae60;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        border-radius: 8px 8px 0 0;
+      }
+      .content {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 12px;
+        color: #777;
+        margin-top: 20px;
+      }
+      .book-details {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+      }
+      .cta {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .button {
+        background-color: #27ae60;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Book Available!</h1>
+    </div>
+    <div class="content">
+      <p>Hello <span th:text="${user.username}">User</span>,</p>
+      <p>Great news! The book you reserved is now available for pickup.</p>
+
+      <div class="book-details">
+        <strong>Book:</strong> <span th:text="${book.title}">Title</span><br />
+        <strong>Author:</strong> <span th:text="${book.author}">Author</span
+        ><br />
+        <strong>Pickup Deadline:</strong>
+        <span
+          style="color: #e74c3c"
+          th:text="${#dates.format(reservation.expiryDate, 'yyyy-MM-dd HH:mm')}"
+          >2026-02-14 10:00</span
+        >
+      </div>
+
+      <p>
+        Please come to the library to collect your book before the deadline,
+        otherwise your reservation will expire.
+      </p>
+
+      <div class="cta">
+        <a href="#" class="button">View Reservation</a>
+      </div>
+    </div>
+    <div class="footer">© 2026 Book Library System. All rights reserved.</div>
+  </body>
+</html>
